@@ -1,5 +1,16 @@
 name: "[nil] Build Self-Hosted PHP Binary (Windows)"
 
+on:
+  workflow_dispatch:
+    inputs:
+        version:
+          required: true
+          description: php version to compile
+          default: '8.5'
+          type: choice
+          options:
+            - '8.5'
+
 jobs:
   build-release-artifacts:
     name: "Build ${{ matrix.php-version }}-${{ matrix.combination }} on ${{ matrix.runner }}"
