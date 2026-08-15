@@ -320,14 +320,13 @@ class Artifact
     }
 
     /**
-     * Get source build root directory.
-     * It's only worked when 'source-root' is defined in artifact config.
-     * Normally it's equal to source dir.
+     * Get the root directory of the buildable source tree.
+     * Equals the source dir unless source.source-root is declared in artifact config.
      */
     public function getSourceRoot(): string
     {
-        if (isset($this->config['metadata']['source-root'])) {
-            return FileSystem::convertPath($this->getSourceDir() . '/' . ltrim($this->config['metadata']['source-root'], '/'));
+        if (isset($this->config['source']['source-root'])) {
+            return FileSystem::convertPath($this->getSourceDir() . '/' . ltrim($this->config['source']['source-root'], '/'));
         }
         return $this->getSourceDir();
     }

@@ -36,7 +36,7 @@ class imagick extends PhpExtensionPackage
     #[PatchDescription('Add the Win32 system libraries the static ImageMagick stack needs')]
     public function patchConfigW32ForWindows(): void
     {
-        $config = $this->getSourceDir() . '/config.w32';
+        $config = $this->getBuildDir() . '/config.w32';
 
         // Idempotency guard (the source dir may be patched in place and reused across builds).
         if (str_contains(FileSystem::readFile($config), 'LIBS_IMAGICK')) {

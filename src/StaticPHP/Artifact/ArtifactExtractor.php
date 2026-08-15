@@ -158,6 +158,9 @@ class ArtifactExtractor
         $extract_config = $artifact->getDownloadConfig('source')['extract'] ?? null;
         if (is_array($extract_config)) {
             $this->doSelectiveExtract($name, $cache_info, $extract_config);
+            if (PHP_OS_FAMILY === 'Windows') {
+                FileSystem::sanitizeSymlinks($target_path);
+            }
             $artifact->emitAfterSourceExtract($target_path);
             logger()->debug("Emitted after-source-extract hooks for [{$name}]");
             return SPC_STATUS_EXTRACTED;
@@ -172,13 +175,22 @@ class ArtifactExtractor
         }
 
         // Remove old directory if hash mismatch
-        if (is_dir($target_path)) {
+        if (FileSystem::isLink($target_path)) {
+            logger()->debug("Source [{$name}] is linked to a local directory, relinking...");
+            FileSystem::removeLink($target_path);
+        } elseif (is_dir($target_path)) {
             logger()->notice("Source [{$name}] hash mismatch, re-extracting...");
             FileSystem::removeDir($target_path);
         }
 
         logger()->info("Extracting source [{$name}] to {$target_path}...");
         $this->doStandardExtract($name, $cache_info, $target_path);
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            // symlinks in archives (e.g. LICENSE-zstd in php-ext-zstd) break
+            // tooling like xcopy, materialize them as regular files
+            FileSystem::sanitizeSymlinks($target_path);
+        }
 
         // Emit after hooks
         $artifact->emitAfterSourceExtract($target_path);

@@ -5,7 +5,6 @@ ext-rar:
       type: git
       url: 'https://github.com/static-php/php-rar.git'
       rev: issue-php82
-      extract: php-src/ext/rar
     metadata:
       license-files: [LICENSE]
       license: PHP-3.01

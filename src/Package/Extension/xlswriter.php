@@ -34,7 +34,7 @@ class xlswriter extends PhpExtensionPackage
     public function patchConfigForStaticExpat(): void
     {
         FileSystem::replaceFileStr(
-            "{$this->getSourceDir()}/config.w32",
+            "{$this->getBuildDir()}/config.w32",
             "' /D USE_SYSTEM_MINIZIP",
             "' /D XML_STATIC /D USE_SYSTEM_MINIZIP"
         );
@@ -44,7 +44,7 @@ class xlswriter extends PhpExtensionPackage
     #[PatchDescription('Fix Windows build: apply win32 patch and add UTF-8 BOM to theme.c')]
     public function patchBeforeMakeForWindows(): void
     {
-        $source_dir = $this->getSourceDir();
+        $source_dir = $this->getBuildDir();
         $theme_file = "{$source_dir}/library/libxlsx/src/theme.c";
 
         // fix windows build with openssl extension duplicate symbol bug

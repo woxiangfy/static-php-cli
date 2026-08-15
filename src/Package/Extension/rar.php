@@ -21,7 +21,7 @@ class rar extends PhpExtensionPackage
     {
         // workaround for newer Xcode clang (>= 15.0)
         if (SystemTarget::getTargetOS() === 'Darwin') {
-            FileSystem::replaceFileStr("{$this->getSourceDir()}/config.m4", '-Wall -fvisibility=hidden', '-Wall -Wno-incompatible-function-pointer-types -fvisibility=hidden');
+            FileSystem::replaceFileStr("{$this->getBuildDir()}/config.m4", '-Wall -fvisibility=hidden', '-Wall -Wno-incompatible-function-pointer-types -fvisibility=hidden');
         }
     }
 }

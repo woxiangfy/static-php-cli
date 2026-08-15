@@ -126,7 +126,7 @@ class ConfigValidator
         'url' => [['url'], ['filename', 'extract', 'version']],
         'bitbuckettag' => [['repo'], ['extract']],
         'local' => [['dirname'], ['extract']],
-        'pie' => [['repo'], ['extract']],
+        'pie' => [['repo'], ['extract', 'prefer-stable']],
         'pecl' => [['name'], ['extract', 'prefer-stable']],
         'php-release' => [['domain'], ['extract']],
         'custom' => [[], ['func']],
@@ -327,8 +327,8 @@ class ConfigValidator
                 throw new ValidationException("Artifact source object of type '{$type}' must have required field '{$field}'");
             }
         }
-        // check for unknown fields
-        $allowed_fields = array_merge(['type'], $required_fields, $optional_fields);
+        // check for unknown fields ('source-root': optional build source root subdir, applies to any type)
+        $allowed_fields = array_merge(['type', 'source-root'], $required_fields, $optional_fields);
         self::validateNoInvalidFields('artifact object', $item_name, $data, $allowed_fields);
     }
 

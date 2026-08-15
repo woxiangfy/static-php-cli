@@ -15,6 +15,7 @@ use StaticPHP\Attribute\Package\ResolveBuild;
 use StaticPHP\Attribute\Package\Stage;
 use StaticPHP\Attribute\Package\Target;
 use StaticPHP\Attribute\Package\Validate;
+use StaticPHP\Attribute\PatchDescription;
 use StaticPHP\Config\PackageConfig;
 use StaticPHP\DI\ApplicationContext;
 use StaticPHP\Exception\WrongUsageException;
@@ -50,7 +51,7 @@ class php extends TargetPackage
     use frankenphp;
 
     /** @var string[] Supported major PHP versions */
-    public const array SUPPORTED_MAJOR_VERSIONS = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5'];
+    public const array SUPPORTED_MAJOR_VERSIONS = ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6'];
 
     /**
      * Get PHP version ID from php_version.h
@@ -397,6 +398,90 @@ class php extends TargetPackage
 
         // clean old modules that may conflict with the new php build
         FileSystem::removeDir(BUILD_MODULES_PATH);
+    }
+
+    /**
+     * Ensure every resolved extension with an artifact is present in php-src/ext.
+     * Extension sources are extracted to the default source dir (source/{name}); the
+     * in-tree PHP build requires each extension at php-src/ext/{name} with
+     * config.m4/config.w32 directly inside, so link the extension source root into
+     * place before buildconf: a symlink on Unix, an NTFS junction on Windows (with a
+     * plain copy as fallback), so patches always hit the tree actually compiled.
+     *
+     * Existing dirs are classified by markers: a link/junction is our own (refreshed
+     * when its target differs), a .spc-ext-sync marker is our Windows copy fallback
+     * (refreshed), anything else is bundled with php-src (e.g. zip, or imap on
+     * PHP < 8.5) and left untouched.
+     */
+    #[BeforeStage('php', 'build')]
+    public function syncExtensionSources(PackageInstaller $installer): void
+    {
+        foreach ($installer->getResolvedPackages(PhpExtensionPackage::class) as $ext) {
+            if ($ext->getArtifact() === null) {
+                continue;
+            }
+            $source_root = $ext->getSourceRoot();
+            if (!is_dir($source_root)) {
+                continue;
+            }
+            $ext_dir = FileSystem::convertPath(SOURCE_PATH . '/php-src/ext/' . $ext->getExtensionName());
+            // already in place: bundled with php-src (getBuildDir prefers it for static
+            // builds), extracted directly in-tree, or a correct link/junction
+            if (realpath($ext_dir) === realpath($source_root)) {
+                continue;
+            }
+            if (FileSystem::isLink($ext_dir)) {
+                FileSystem::removeLink($ext_dir);
+            } elseif (is_dir($ext_dir)) {
+                if (!file_exists("{$ext_dir}/.spc-ext-sync")) {
+                    // bundled with php-src, keep it (used when the extension is built shared only)
+                    logger()->debug("Extension [{$ext->getName()}] keeps bundled source at {$ext_dir}.");
+                    continue;
+                }
+                FileSystem::removeDir($ext_dir);
+            }
+            if (PHP_OS_FAMILY === 'Windows') {
+                logger()->debug("Junctioning extension [{$ext->getName()}] source root to {$ext_dir}...");
+                if (!FileSystem::linkDir($source_root, $ext_dir)) {
+                    logger()->notice("Cannot junction extension [{$ext->getName()}] source root, falling back to copy.");
+                    FileSystem::copyDir($source_root, $ext_dir);
+                    FileSystem::writeFile("{$ext_dir}/.spc-ext-sync", $source_root);
+                }
+            } else {
+                logger()->debug("Linking extension [{$ext->getName()}] source root to {$ext_dir}...");
+                symlink($source_root, $ext_dir);
+            }
+        }
+    }
+
+    #[BeforeStage('php', 'build')]
+    #[PatchDescription('Replace XtOffsetOf (removed in PHP 8.6) with offsetof in extension sources')]
+    public function patchExtensionXtOffsetOf(PackageInstaller $installer): void
+    {
+        if (self::getPHPVersionID() < 80600) {
+            return;
+        }
+        foreach ($installer->getResolvedPackages(PhpExtensionPackage::class) as $ext) {
+            // extensions bundled with php-src are already 8.6-clean
+            if ($ext->getArtifact() === null) {
+                continue;
+            }
+            $build_dir = $ext->getBuildDir();
+            if (!is_dir($build_dir)) {
+                continue;
+            }
+            foreach (FileSystem::scanDirFiles($build_dir) ?: [] as $file) {
+                if (!in_array(FileSystem::extname($file), ['c', 'cc', 'cpp', 'cxx', 'h', 'hpp'], true)) {
+                    continue;
+                }
+                $content = FileSystem::readFile($file);
+                if (!str_contains($content, 'XtOffsetOf')) {
+                    continue;
+                }
+                logger()->debug("Replacing XtOffsetOf with offsetof in {$file}");
+                FileSystem::writeFile($file, str_replace('XtOffsetOf', 'offsetof', $content));
+            }
+        }
     }
 
     #[Stage('postInstall')]

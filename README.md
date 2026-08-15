@@ -16,7 +16,7 @@
 
 ## Features
 
-- :elephant: Support multiple PHP versions - PHP 8.1, 8.2, 8.3, 8.4, 8.5
+- :elephant: Support multiple PHP versions - PHP 8.1, 8.2, 8.3, 8.4, 8.5, 8.6 (pre-release)
 - :handbag: Build single-file PHP executable with zero dependencies
 - :hamburger: Build **[phpmicro](https://github.com/static-php/phpmicro)** self-extracting executables (combines PHP binary and source code into one file)
 - :pill: Automatic build environment checker with auto-fix capabilities
@@ -63,7 +63,7 @@ chmod +x ./spc
 First, create a `craft.yml` file and specify which extensions you want to include from [extension list](https://static-php.dev/en/guide/extensions.html) or [command generator](https://static-php.dev/en/guide/cli-generator.html):
 
 ```yml
-# PHP version support: 8.1, 8.2, 8.3, 8.4, 8.5
+# PHP version support: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6 (pre-release)
 php-version: 8.5
 # Put your extension list here
 extensions: "apcu,bcmath,calendar,ctype,curl,dba,dom,exif,fileinfo,filter,gd,iconv,mbregex,mbstring,mysqli,mysqlnd,opcache,openssl,pcntl,pdo,pdo_mysql,pdo_sqlite,phar,posix,readline,redis,session,simplexml,sockets,sodium,sqlite3,tokenizer,xml,xmlreader,xmlwriter,xsl,zip,zlib"
@@ -145,6 +145,10 @@ You can sponsor me or my project from [GitHub Sponsor](https://github.com/crazyw
 <a href="https://beyondco.de/"><img src="/docs/public/images/beyondcode-seeklogo.png" width="300" alt="Beyond Code Logo" /></a>
 
 <a href="https://nativephp.com/"><img src="/docs/public/images/nativephp-logo.svg" width="300" alt="NativePHP Logo" /></a>
+
+<img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo" width="96" />
+
+**[JetBrains](https://github.com/JetBrains)** provides core contributors with <a href="https://www.jetbrains.com/community/opensource">OSS Development Licenses</a>
 
 ## Open-Source License
 
