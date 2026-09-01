@@ -136,6 +136,11 @@ class ArtifactExtractor
             throw new WrongUsageException("Artifact source [{$name}] not downloaded, please download it first!");
         }
 
+        if (($cache_info['cache_type'] ?? null) === 'local') {
+            $artifact->emitAfterSourceExtract($artifact->getSourceDir());
+            return SPC_STATUS_ALREADY_EXTRACTED;
+        }
+
         $source_file = $this->cache->getCacheFullPath($cache_info);
         $target_path = $artifact->getSourceDir();
 
@@ -518,7 +523,7 @@ class ArtifactExtractor
      *
      * Supports: tar, tar.gz, tgz, tar.bz2, tar.xz, txz, zip, exe
      *
-     * @param bool $merge when true, merge zip contents into existing target dir instead of wiping it
+     * @param bool $merge when true, merge contents into existing target dir instead of wiping it
      */
     protected function extractArchive(string $filename, string $target, bool $merge = false): void
     {
@@ -527,10 +532,17 @@ class ArtifactExtractor
 
         $extname = FileSystem::extname($filename);
 
-        if ($extname !== 'exe' && !is_dir($target)) {
-            FileSystem::createDir($target);
+        if ($extname !== 'exe') {
+            // tar extraction merges into whatever is already there, so a re-extract would
+            // leave files from the previous version behind
+            if (!$merge && is_dir($target)) {
+                FileSystem::removeDir($target);
+            }
             if (!is_dir($target)) {
-                throw new FileSystemException("Failed to create target directory: {$target}");
+                FileSystem::createDir($target);
+                if (!is_dir($target)) {
+                    throw new FileSystemException("Failed to create target directory: {$target}");
+                }
             }
         }
         match (SystemTarget::getTargetOS()) {
