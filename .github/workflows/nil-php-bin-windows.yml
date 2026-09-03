@@ -50,7 +50,7 @@ jobs:
 
       - name: "Checkout remote"
         if: github.repository != 'crazywhalecc/static-php-cli'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: crazywhalecc/static-php-cli
           ref: v3
@@ -65,7 +65,7 @@ jobs:
 
       - name: "Cache composer packages"
         id: composer-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
@@ -73,7 +73,7 @@ jobs:
             ${{ runner.os }}-php
 
       - id: cache-download
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: downloads
           key: pack-lib-dependencies-${{ matrix.combination }}-${{ matrix.php-version }}-${{ matrix.runner }}
@@ -116,7 +116,7 @@ jobs:
           echo -e "# Note\n\nCurrent distribution uses extensions:\n\n${{ steps.process-env.outputs.EXTENSIONS }}\n\nUsing compile command:\n\n  bin/spc build --build-cli --build-micro \"${{ steps.process-env.outputs.EXTENSIONS }}\" --debug --with-upx-pack --dl-with-php=\"${{ matrix.php-version }}\"" > dist/README.txt
 
       - name: "Upload Artifact"
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: php-${{ matrix.php-version }}-windows-${{ matrix.combination }}
           path: |
