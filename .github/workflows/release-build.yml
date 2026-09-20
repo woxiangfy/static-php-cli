@@ -1,12 +1,6 @@
 name: Build SPC Binary
 
 on:
-  push:
-    branches: [ "main", "v3" ]
-  pull_request:
-    branches: [ "main", "v3" ]
-    paths:
-      - '.github/workflows/release-build.yml'
   release:
     types:
       - published
